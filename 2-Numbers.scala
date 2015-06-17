@@ -59,8 +59,8 @@ object Section2p5{
       if((fp-fp1).abs<0.0001) true else false
     }
   }
-
   0.3 ~= (0.1+0.2)       // -> res37: Boolean = false
+  0.3 ~= 0.1+0.2         // -> res4: Boolean = true   we can even get rid of the () which makes it look more real!
 
   def ~=(x: Double, y: Double, precision: Double) = {
     if ((x - y).abs < precision) true else false
