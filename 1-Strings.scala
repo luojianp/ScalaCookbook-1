@@ -218,6 +218,7 @@ object Section1p10 {
 
   // Put the implicit class in an object
   object StringUtils {
+    // this implicite class add the enclosed method as member methods to the type in the constructur: in this case, String
     implicit class StringImprovements(val s: String) {
       def increment = s.map(c => (c + 1).toChar)
       def decrement = s.map(c => (c - 1).toChar)
