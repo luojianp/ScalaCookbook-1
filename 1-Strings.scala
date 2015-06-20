@@ -91,14 +91,14 @@ object Section1p4{
    // The f string interpolator (printf style formatting)
    println(f"$name is $age years old, and weighs $weight%.2f pounds.")
    println(f"$name is $age years old, and weighs $weight%.0f pounds.")
-   val out = f"$name, you weigh $weight%.0f pounds."
+   var out = f"$name, you weigh $weight%.0f pounds."
 
    // The raw interpolator (“performs no escaping of literals within the string.”: ex. print '\n' as is)
-   var out = raw"foo\nbar"
+  out = raw"foo\nbar"
 
 
    // The format() method
-   val s = "%s is %d years old".format(name, age)
+   var s = "%s is %d years old".format(name, age)
    override def toString: String = "%s %s, age %d".format(firstName, lastName, age)
 
 
