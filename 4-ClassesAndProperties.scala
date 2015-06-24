@@ -222,17 +222,160 @@ object Section4p5{
 
 // 4.6. Overriding Default Accessors and Mutators
 object Section4p6{
-  // use _name to avoid colliding the name of the accessor method
-  // use private modifier to prevent the default getter/setter from being generated
-  //      (because we want to only use self-defined getter and setter)
-  // cannot get rid of var modifier to preven default getter/setter being generated
-  //    -> because _name will be default to val, which makes us unable to create our own setter for it
+  // Solution:
+  //    self defined accessor:
+  //        - use _name as parameter name in primary constructor to avoid colliding the accessor method name: "name"
+  //        - use private modifier to prevent the default getter/setter from being generated
+  //          -> (because we want to only use self-defined getter and setter)
+  //    self defined mutator:
+  //        - use name_ as mutator name, conforming the convention
+  //    Others:
+  //        - cannot get rid of var modifier to preven default getter/setter being generated
+  //          -> because _name will be default to val, which makes us unable to create our own setter for it
   class Person(private var _name: String) {
     def name = _name // accessor
+    // Note: calling the getter method name returns the variable "_name"
     def name_=(aName: String) { _name = aName } // mutator
-    // by converntion, the setter need to have an _ after the setter name
+    // Note: calling the setter method name_= sets the variable "_name"
+    // ex. for the example above:
+    //    the setter method name: name_=
+    //    the setter method parameter: (aName:String)
+    //    the setter definition:  {_name = aName}
   }
   val p = new Person("Jonathan")
   p.name = "Jony" // setter
   println(p.name) // getter
+}
+
+
+// 4.7. Preventing Getter and Setter Methods from Being Generated
+object Section4p7{
+  // Solution:
+  //    using the private access modifier
+  class Stock{
+    var delayedPrice:Double = _    // getter and setter methods are generated
+    private var currentPrice:Double = _   // keep this field hidden from other classes
+    // any instance of a Stock class can access a private field of any other Stock instance.
+
+    // object private field:  -> private[this]
+    private[this] var price: Double = _
+    // error: this method won't compile because price is now object-private
+    //    def isHigher(that: Stock): Boolean = this.price > that.price
+  }
+}
+
+
+// 4.8. Assigning a Field to a Block or Function and Lazy Evaluation
+object Section4p8{
+  /*
+   * assignment of the code block to the text field and the println statement are both in the body of the Foo class,
+   *  -> they are in the class’s constructor,
+   *  -> will be executed when a new instance of the class is created (sometimes we dont want this so we use "lazy" modifier)
+   */
+  class Foo{
+    val text = {  // assigneng code block to a field  (using return)
+      var lines=""
+      lines = io.Source.fromFile("/etc/passwd").getLines.mkString
+      lines
+    }
+    println(text)
+  }
+
+  // lazy evaluation, useful when:
+  //    -> the field might not be accessed in the normal processing of your algorithms,
+  //    -> running the algorithm will take a long time, and you want to defer that to a later time
+  class FooLazy{
+    // lazy evaluation:
+    lazy val text_lazy = io.Source.fromFile("/etc/passwd").getLines.foreach(println)
+  }
+  val f = new FooLazy // will not get text_lazy to be printed
+  f.text_lazy   // will get text_lazy to be printed
+
+  class FooNotLazy{
+    val text = io.Source.fromFile("/etc/passwd").getLines.foreach(println)
+  }
+  val q = new FooNotLazy  // will get text to be printed
+}
+
+
+
+// 4.9. Setting Uninitialized var Field Types
+object Section4p9{
+  // Solution:
+  //  -> In general, define the field as an Option (ex. None:Option[<Type>])
+  //  -> For certain types, such as String and numeric fields, you can specify default initial values.
+  case class Address(city:String, state:String, zip:String)
+    //  -> Case class constructor parameters are val by default,
+    //    -> so dont need to specify modifier and getter will be automatically generated
+  case class Person(val userName: String, var passWord:String){   // you can override the default val too
+    var age=0
+    var firstName = ""
+    var lastName =""
+    var address = None:Option[Address]
+  }
+  // to initialize None:Option initialized variable:
+  val p = Person("alvinalexander", "secret")  // case class dont need new to be instantiated
+  p.address = Some(Address("Talkeetna", "AK", "99676"))
+  // to access Option typed variable:
+  p.address.foreach{ a=>
+    println(a.city)
+    println(a.state)
+    println(a.zip)
+  }
+}
+
+
+// 4.10. Handling Constructor Parameters When Extending a Class
+object Section4p10{
+  // Problem
+  //    You want to extend a base class, and need to work with the constructor parameters declared in the base class and new parameters in the subclass.
+  // Solution:
+  //    Declare base class as usual with val or var constructor parameters
+  //    Declare sub class:
+  //      -> leave the val or var declaration off of the fields that are common to both classes.
+  //      -> define new constructor parameters in the subclass as val or var fields, as usual.
+  case class Address(city:String, state:String)
+  class Person(var name: String, var address:Option[Address]){
+    override def toString = if(address==None) name else s"$name @ $address"
+  }
+  class Employee(name:String, address:Option[Address], var age:Int) extends Person(name, address){
+    // rest of code
+  }
+
+  // creating new Employee
+  val p = new Employee("Duo", Some(Address("San Jose", "CA")), 20)
+  println(p.toString)
+  println(p.address.get.state)
+}
+
+// 4.11. Calling a Superclass Constructor
+object Section4p11{
+  // Problem:
+  //    You want to control the superclass constructor that’s called when you create constructors in a subclass.
+  // Solution:
+  //    See comments below
+  case class Address(city:String, state:String)
+  case class Role(role:String)
+  class Person(var name:String, var address:Address){
+    def this(name:String){ // no way for Employee auxiliary constructors to call this constructor
+      this(name, null)
+      address = null
+    }
+    override def toString = if(address==null) name else s"$name @ $address"
+  }
+  // subclass can choose which super class constructor to call from its primary constructor
+  //    -> by extending super/aux constructor of the super class
+  class Employee(name:String, var role:Role, address:Address) extends Person(name, address){
+    // subclass cannot choose which super class constuctor to call form its auxiliary constructor
+    //    all subclass' auxiliary constructors will call the same superclass constructor that’s called from the subclass’s primary constructor.
+    def this(name:String){
+      this(name, null, null)  //
+    }
+    def this(name:String, role:Role){
+      this(name, role, null)
+    }
+    def this(name:String, address:Address){
+      this(name, null, address)
+    }
+  }
 }
