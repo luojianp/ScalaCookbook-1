@@ -1,8 +1,11 @@
 // Introduction
 //  Scala methods:
-//    1. return type does not have to be specified
+//    1. return
+//          -> return type does not have to be specified
+//          -> to return something, must have the "=" between method-name and method definition({..}), otherwise, it wont return
+//          -> not necessarily to specify the "return" keyword
 //    2. {} around short method body are not required
-//    3. etc...
+//    3. TBC
 
 // 5.1. Controlling Method Scope
 // Problem:
@@ -23,7 +26,6 @@
     private[acme]       |   The method is available to all classes beneath the com.acme package.
     (no modifier)       |   The method is public
 */
-
 object Section5p1{
     // object private scope example - most restrictive scope
     //      -> method only available to the current instance of this class
@@ -241,4 +243,112 @@ object Section5p6{
     val p = new Pizza
     println(p.crustSize)    // this works
     // println(p.crustSize())      // this gives compilation error
+}
+
+
+
+// 5.7. Creating Methods That Take Variable-Argument Fields (VarArgs)
+// Solution:
+//      Define a varargs field in your method declaration by adding a * character after the field type:
+object Section5p7{
+    // Tips about vararg field
+    //      1. vararg field must ve the last field in the method signature
+    //          -> def printAll(strings: String*, i: Int) {...}     -> wrong
+    //      2. a method can only have one vararg field
+    //      3. if a field is a vararg field, it also works without supplied any arguments
+    //      4. typically use a loop to handle the vararg field inside the method
+
+    // an example:
+    def printAll(strings:String*){
+        strings.foreach(println)
+    }
+    // call vararg method
+    printAll()      // support 0 argument provision
+    printAll("foo")
+    printAll("foo", "bar", "baz")
+
+    // Use _* to adapt a sequence
+    //   -> think of _* as a “splat” operator
+    //      -> tells the compiler to pass each element of the sequence to printAll as a separate argument,
+    //              instead of passing fruits as a single argument.
+    val fruits = List("banana", "apple", "cherry")
+    printAll(fruits:_*)
+
+    // handling vararg field
+    // version 1
+    def printAllI(numbers: Int*) {
+        numbers.foreach(println)
+    }
+    // version 1
+    def printAllII(numbers: Int*) {
+        for (i <- numbers) println
+    }
+}
+
+
+// 5.8. Declaring That a Method Can Throw an Exception
+//      Solution:
+//          using @throws annotation
+object Section5p8{
+    // some examples:
+    @throws(classOf[Exception])
+    def play {
+      // exception throwing code here ...
+    }
+    //  throw more than 1 exceptions
+    //@throws(classOf[IOException])
+    //@throws(classOf[LineUnavailableException])
+    //@throws(classOf[UnsupportedAudioFileException])
+    def playSoundFileWithJavaAudio {
+      // exception throwing code here ...
+    }
+    def boom {
+        throw new Exception
+    }
+}
+
+
+// 5.9. Supporting a Fluent Style of Programming (Method Chaining)
+// Solution:
+//      -> If your class can be extended, specify "this.type" as the return type of fluent style methods and return "this"
+//      -> If your class won’t be extended,you can optionally return "this" from your fluent style methods without specifying return type
+object Section5p9{
+    // What is method chaining:
+        /*
+        person.setFirstName("Leonard")
+              .setLastName("Nimoy")
+              .setAge(82)
+              .setCity("Los Angeles")
+              .setState("California")
+        */
+    // some examples:
+    class Person{
+        protected var fName = ""
+        protected var lName = ""
+        def setFirstName(firstName:String): this.type = {
+            fName = firstName
+            this
+        }
+        def setLastName(lastName:String): this.type = {
+            lName = lastName
+            this
+        }
+    }
+    class Employee extends Person{
+        protected var role = ""
+        def setRole(role:String): this.type = {
+            this.role = role
+            this
+        }
+        override def toString = {
+            "%s, %s, %s".format(fName, lName, role)
+        }
+    }
+
+    // to call:
+    val employee = new Employee
+    employee.setFirstName("Al")
+            .setLastName("Alex")
+            .setRole("Developer")
+    println(employee)
 }
