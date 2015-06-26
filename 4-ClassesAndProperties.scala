@@ -379,3 +379,197 @@ object Section4p11{
     }
   }
 }
+
+
+// 4.12. When to Use an Abstract Class
+object Section4p12{
+  // Problem:
+  //    Scala has traits, and a trait is more flexible than an abstract class, so you wonder, “When should I use an abstract class?”
+  // Solution:
+  //    You want to create a base class that requires constructor arguments
+  //      -> because traits don’t allow constructor parameters
+  //    The code will be called from Java code.
+
+  // about abstract class:
+  //    To declare that a method is abstract, just leave the body of the method undefined:
+  //      -> def speak
+  //    When a class extends an abstract class, it must
+  //      -> implement all its abstract methods
+  //      -> otherwise, it must declare itself as an abstract class
+  //    can only extend one abstract class (but can extend may traits)
+  abstract class Database{
+    def save()
+    def update()
+    def delete()
+  }
+  abstract class BaseController(db:Database){
+    def save() {db.save}
+    def update() {db.update}
+    def delete() {db.delete}
+
+    def connect()   // abstract
+    def getStatus:String    // an abstract method that returns a String
+    def setServerName(serverName:String)     // an abstract method that takes a parameter
+  }
+}
+
+
+// 4.13. Defining Properties in an Abstract Base Class (or Trait)
+object Section4p13{
+  // Solution:
+  //    declare both val and var fields in an abstract class (or trait)
+  //      -> they can be abstract or have concrete implementations
+  abstract class Pet(name:String){
+    // When you define an abstract field in an abstract class or trait,
+    //    the Scala compiler does not create a field in the resulting code;
+    //    it only generates the methods that correspond to the val or var field. (getter/setter)
+    // developers define a def that takes no parameters in the abstract base class rather than defining a val.
+    //    -> They may then redefine it to val in the concrete class, if desired
+    val greeting:String
+    def greeting2: String
+    var age:Int
+    def sayHello() { println(greeting) }
+    override def toString = s"I say $greeting, I am $age"
+  }
+  class Dog (name: String) extends Pet (name) {
+    // when you provide concrete values for abstract fields in your concrete classes, you must again define your fields to be val or var
+    //     -> Because the fields don’t actually exist in the abstract base class (or trait)
+    //     -> override keyword is not necessary
+
+    val greeting = "Woof"
+    val greeting2 = "Woof2"
+    var age = 2
+  }
+  class Cat (name: String) extends Pet (name) {
+    // when you provide concrete values for abstract fields in your concrete classes, you must again define your fields to be val or var
+    val greeting = "Meow"   // abstract fields again need to be specified as val or var
+    val greeting2 = "Meow2"
+    var age = 5
+  }
+
+  // Concrete val fields in abstract classes
+  //    -> in the example below, the greeting variable is created in both classes (Animal2, Dog2)
+  abstract class Animal2 {
+    // When defining a concrete val field in an abstract class,
+    //    -> you can provide an initial value
+    //    -> then override that value in concrete subclasses:
+    val greeting = "Hello"    // provide an initial value
+      // To prevent a concrete val field in an abstract base class from being overridden in a subclass, declare the field as a final val
+      //    -> final val greeting = "Hello"
+    def sayHello() { println(greeting) }
+    def run
+  }
+  class Dog2 extends Animal2 {
+    override val greeting = "Woof"    // need to override if the field is of type val in abstract class
+    def run { println("Dog is running") }
+  }
+
+  // Concrete var fields in abstract classes
+  abstract class Animal3 {
+    var greeting = "Hello"
+    var age = 0
+    override def toString = s"I say $greeting, and I'm $age years old."
+  }
+  class Dog3 extends Animal3 {
+    // Because the fields are declared and initialized in the abstract Animal base class,
+    //    -> there’s no need to redeclare the fields as val or var in the concrete Dog subclass.
+    greeting = "Woof"     // do not need to override if the field is of type var in the abstract class
+    age = 2
+  }
+}
+
+
+// 4.14. Generating Boilerplate Code with Case classes
+//  Solution:
+//    when case class is declared, Scala compiler will automatically generate many Boilerpalte codes for this class, including:
+//      -> apply/unapply, getter/setter, toString, equals, copy
+object Section4p14{
+  // define case class
+  case class Person(name:String, relation:String)   // name and relation are 'val' by default
+  case class PersonII(name:String, var relation:String)   // can also override the default val by modify it with var
+
+  // defining a case class can result a lot of Boilerplate code to be generated
+  // 1. default apply method -> dont need to use "new" to create a new instance
+    val emily = Person("Emily", "Niece")
+    val emilyII = PersonII("Emily", "Niece")
+  // 2. default unapply method -> used to extract information in match expressions
+    emily match {
+      case Person(n,r) => println(n,r)  // n and r are automatically extracted from the matched pattern and stored in n and r
+    }
+  // 3. default accessor and mutator
+  //    -> accessor methods are auto generated for all params,
+  //    -> mutator methods are only generated for params declared as var
+    println(emily.name)
+    emilyII.relation = "Sister" // relation has setter because it is modified with var
+  // 4. default toString method
+    println(emily)
+  // 5. default equals and hashCode methods -> used to compare instances
+    val hannah = Person("Hannah", "Niece")
+    println(emily==hannah)    // return false
+  // 6. default copy method -> used to colone an object
+    val emilyTemp = Person("emilyTemp", "SisterTmp")    // emilyTemp: Person = Person(emilyTemp,SisterTmp)
+    val emilyCpy = emilyTemp.copy(name="emilyTmp")           // emilyCpy: Person = Person(emilyTmp,SisterTmp)
+        // seletive copy
+}
+
+
+// 4.15. Defining an equals Method (Object Equality)
+//    -> with equals method defined, you can use == to compare object equality instead of calling the method itself
+object Section4p15{
+  // an example
+  class Person (name:String, age:Int){
+    def canEqual(a:Any) = a.isInstanceOf[Person]
+    override def equals(that:Any):Boolean = that match{
+      //case that:Person => that.canEqual(this) && this.hashCode == that.hashCode
+      case bla:Person => bla.canEqual(this) && this.hashCode==bla.hashCode
+      case _ => false
+    }
+    override def hashCode:Int = {
+      val prime = 31
+      var result =1
+      result = prime * result + age
+      result = prime * result + (if (name==null) 0 else name.hashCode)
+      return result
+    }
+  }
+}
+
+// 4.16. Creating Inner Classes
+// Problem:
+//    You want to create a class as an inner class to help keep the class out of your public API, or to otherwise encapsulate your code.
+//  Solution:
+//    Declare one class inside another class
+object Section4p16{
+  // in Scala, such inner classes are bound to the outer object.”
+  // can have object inside class, class inside object, class inside class, object inside object
+  class OuterClass{
+    object InnerObject{
+      val x = 1
+    }
+  }
+  println(new OuterClass().InnerObject.x)
+
+  // can have class inside object
+  object OuterObject{
+    class InnerClass{
+      val x=1
+    }
+  }
+  println(new OuterObject.InnerClass().x)
+
+  class OuterClassII{
+    class InnerClassII{
+      val x=1
+    }
+  }
+  val objII = new OuterClassII()
+  println(new objII.InnerClassII().x)
+  // this does not work: println(new OuterClassII().InnerClassII().x)
+
+  object OuterObjectII{
+    object InnerObjectII{
+      val x=1
+    }
+  }
+  println(OuterObjectII.InnerObjectII.x)
+}
