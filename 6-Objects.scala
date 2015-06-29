@@ -188,10 +188,34 @@ object Section6p7{
                 package com.alvinalexander.myapp
         - use that name (model) as the name of your package object:
                 package object model { ...}
-    4. summing up, for the package.scala living under "com/alvinalexander/myapp/model", the first few lines of this fils should be:
+    4. summing up, for the file package.scala living under "com/alvinalexander/myapp/model", the first few lines of this fils should be:
+        // package file: package.scala
         package com.alvinalexander.myapp
         package object model {
-            ...
+            // field
+            val MAGIC_NUM = 42
+            // method
+            def echo(a: Any) { println(a) }
+            // enumeration
+            object Margin extends Enumeration {
+                type Margin = Value
+                val TOP, BOTTOM, LEFT, RIGHT = Value
+            }
+            // type definition
+            type MutableMap[K, V] = scala.collection.mutable.Map[K, V]
+            val MutableMap = scala.collection.mutable.Map
+        }
+        // normal scala file in the same package which uses the sackage object:
+        package com.alvinalexander.myapp.model
+        object MainDriver extends App {
+            // access our method, constant, and enumeration
+            echo("Hello, world")
+            echo(MAGIC_NUM)
+            echo(Margin.LEFT)
+            // use our MutableMap type (scala.collection.mutable.Map)
+            val mm = MutableMap("name" -> "Al")
+            mm += ("password" -> "123")
+            for ((k,v) <- mm) printf("key: %s, value: %s\n", k, v)
         }
      */
 
