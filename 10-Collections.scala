@@ -52,27 +52,72 @@ package Section10p1{
 // 10.2. Choosing a Collection Class
 package Section10p2{
     object ChoosingASequence{
+        // A sequence is a linear collection of elements and may be indexed or linear (a linked list)
+
         /*  The "to-go" option:
                                 |   immutable   |   Mutable
             Indexed             |   Vector      |   ArrayBuffer
             Linear(LinkedList)  |   List        |   ListBuffer
         */
     }
+
     object ChoosingAMap{
-        /*
+        // A map contains a collection of key/value pairs
 
+        /*
+         Mutable & Immutable
+              HashMap         |       ListMap     |       Map
+
+         Only Immutable
+              SortedMap       |       TreeMap
+
+         Only Mutable
+              LinkedHashMap   |      WeakHashMap
         */
+
+        // SortedMap
+        //      -> keep elements in sorted order by key
+        // LinkedHashMap
+        //      -> store elements in insertion order
     }
-    object ChoosingASet{
-        /*
 
+    object ChoosingASet{
+        // A set is a collection that contains no duplicate elements
+
+        /*
+            Mutable & Immutable
+                Set          |       SortedSet     |       TreeSet     |       BitSet     |       HashSet
+
+            Only Immutable
+                 ListSet
+
+            Only Mutable
+                 LinkedHashSet
         */
+
+        // SortedSet
+        //      -> return elements in sorted order by key
+        // LinkedHashSet
+        //      -> store elements in insertion order
+    }
+
+    object OtherCollectionLikeTypes{
+        // Stack, Queue, and Range
+        // tuples, enumerations
+        // Option/Some/None and Try/Success/Failure
     }
 }
 
 // 10.3. Choosing a Collection Method to Solve a Problem
 package Section10p3{
-    object CommonMethodOnAllCollections{
+    object CommonCollectionMethods{
+        /*
+            • c refers to a collection
+            • f refers to a function
+            • p refers to a predicate
+            • n refers to a number
+            • op refers to a simple operation (usually a simple function)
+        */
         // c collect f
         //      - Builds a new collection by applying a partial function to all elements of the collection on which the function is defined.
         Vector(1,2,3,4,5,6,7,8,9,0) collect {
@@ -253,20 +298,219 @@ package Section10p3{
         //      - Returns a nonstrict (lazy) view of the collection.
         Vector(1,2,3,4,5).view      // -> SeqView(...)
     }
-    object FilteringMethods{
 
+    object MutableCollectionMethods{
+        import scala.collection.mutable._
+        // c += x   |   c −= x
+        //      - Adds/remove the element x to the collection c.
+        ArrayBuffer(1,2,3) += 5     // -> ArrayBuffer(1, 2, 3, 5)
+        ArrayBuffer(1,2,3) -= 3     // -> ArrayBuffer(1, 2)
+
+        // c += (x,y,z)     |   c −= (x,y,z)
+        //      - Adds/remove the elements x, y, and z to the collection c.
+        ListBuffer(1,2,3) += (3,4,5)        // -> ListBuffer(1, 2, 3, 3, 4, 5)
+        ListBuffer(1,2,3) += (1,3)        // -> ListBuffer(2)
+
+        // c1 ++= c2    |   c1 −−= c2
+        //      - Adds/remove the elements in the collection c2 to the collection c1.
+        ListBuffer(1,2,3) ++= ArrayBuffer(2,3,4,5)      // -> ListBuffer(1, 2, 3, 2, 3, 4, 5)
+        ListBuffer(1,2,3) --= ArrayBuffer(2)      // -> ListBuffer(1, 3)
+
+        // c(n) = x
+        //      - Assigns the value x to the element c(n).
+        ArrayBuffer(1,2,3)(0) = 10      // becomes ArrayBuffer(10, 2, 3)
+
+        // c clear
+        //      - Removes all elements from the collection.
+        ArrayBuffer(1,2,3,4).clear
+
+        // c remove n   | c remove (n, len)
+        //      - Removes the element at position n, or the elements beginning at position n and continuing for length len
+        ArrayBuffer(1,2,3,4,5).remove(2)        // -> ArrayBuffer(1, 2, 4, 5), return 3
+        ArrayBuffer(1,2,3,4,5).remove(2, 2)     // -> ArrayBuffer(1, 2, 5), do not return anything
+
+    }
+
+    object ImmutableCollectionMethods{
+        // because : immutable collections can’t be modified
+        //      -> result of each expression in the first column must be assigned to a new variable
+
+        // c1 ++ c2
+        //      - Creates a new collection by appending the elements in the collection c2 to the collection c1.
+        Vector(1,2,4) ++ Vector(4,5,6)  // -> Vector(1, 2, 4, 4, 5, 6)
+
+        // c :+ e
+        //      - Returns a new collection with the element e appended to the collection c.
+        Vector(1,2,4) :+ 5      // -> Vector(1, 2, 4, 5)
+
+        // e +: c
+        5 +: Vector(1,2,4)      // -> Vector(5, 1, 2, 4)
+
+        // e :: list
+        //      - Returns a List with the element e prepended to the List named list. (:: works only on List.)
+        5 :: List(1,2,3)        // -> List(5, 1, 2, 3)
+
+        // Refer to CommonCollectionMethods Section for the methods below
+        // c drop n
+        // c dropWhile p
+        // c filter p
+        // c filterNot p
+        // c head
+        // c tail
+        // c take n
+        // c takeWhile p
+    }
+
+    object MapsMethods{
+        /*
+            • m refers to a map
+            • mm refers to a mutable map
+            • k refers to a key
+            • p refers to a predicate (a function that returns true or false)
+            • v refers to a map value
+            • c refers to a collection
+        */
+        object MethodsForBothMutableAndImmutableMaps{
+            // m(k)
+            //      - Returns the value associated with the key k.
+            Map(1->'a', 2->'b', 3->'c', 4->'d')(4)      // -> return 'd'
+            Map(1->'a', 2->'b', 3->'c', 4->'d')(9)      // -> Error
+            // m get k
+            //      - Returns the value for the key k as Some[A] if the key is found, None otherwise.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').get(3)      // -> Some(c)
+            Map(1->'a', 2->'b', 3->'c', 4->'d').get(9)      // -> None
+
+            // m getOrElse(k, d)
+            //      - Returns the value for the key k if the key is found, otherwise returns the default value d.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').getOrElse(3, "Not Found")      // -> c : Any
+            Map(1->'a', 2->'b', 3->'c', 4->'d').getOrElse(9, "Not Found")      // -> Not Found : Any
+
+            // m keys
+            //      - Returns the keys from the map as an Iterable.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').keys            // -> Set(2, 4, 1, 3)
+            // m keySet
+            //      - Returns the keys from the map as a Set.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').keySet          // -> Set(2, 4, 1, 3)
+            // m keyIterator
+            //      - Returns the keys from the map as an Iterator.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').keysIterator        // -> res251: Iterator[Int] = non-empty iterator
+
+            // m values
+            //      - Returns the values from the map as an Iterable.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').values          // -> HashMap(b, d, a, c)
+            // m valuesIterator
+            //      - Returns the values from the map as an Iterator.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').valuesIterator  // -> res250: Iterator[Char] = non-empty iterator
+
+            // m contains k
+            //      - Returns true if the map m contains the key k.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').contains(5)     // -> false
+            // m isDefinedAt k
+            //      - Returns true if the map contains the key k.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').isDefinedAt(4)      // -> true
+
+            // m filter p   |   m filterKeys p
+            //      - Returns a map whose (keys and values) | keys match the condition of the predicate p.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').filterKeys(_%2==0)     // -> Map(2 -> b, 4 -> d)
+
+            // m mapValues f
+            //      - Returns a new map by applying the function f to every value in the initial map.
+            Map(1->'a', 2->'b', 3->'c', 4->'d').mapValues(_.toUpper)        // -> Map(2 -> B, 4 -> D, 1 -> A, 3 -> C)
+
+
+
+
+        }
+
+
+        object ImmutableMapMethods{
+            // m-k
+            //      - Returns a map with the key k (and its corresponding value) removed.
+            Map(1->'a', 2->'b', 3->'c', 4->'d') - 3     // -> Map(2 -> b, 4 -> d, 1 -> a)
+
+            // m - (k1, k2, k3)
+            //      - Returns a map with the keys k1, k2, and k3 removed.
+            Map(1->'a', 2->'b', 3->'c', 4->'d') - (2,3)     // -> Map(4 -> d, 1 -> a)
+
+            // m -- c
+            //      - Returns a map with the keys in the collection removed
+            Map(1->'a', 2->'b', 3->'c', 4->'d') -- Vector(1,2)      // -> Map(4 -> d, 3 -> c)
+        }
+        object MutableMapMethods{
+            import scala.collection.mutable._
+            // mm += (k -> v)   |   mm += (k1 -> v1, k2 -> v2)
+            //      - Add the key/value pair(s) to the mutable map mm.
+            Map(1->'a', 2->'b', 3->'c', 4->'d') += (5->'e')     // -> Map(2 -> b, 5 -> e, 4 -> d, 1 -> a, 3 -> c)
+            Map(1->'a', 2->'b') += (3->'c', 4->'d', 5->'e')     // ->  Map(2 -> b, 5 -> e, 4 -> d, 1 -> a, 3 -> c)
+
+            // mm -= k  |   mm -= (k1, k2, k3)
+            //      - Remove map entries from the mutable map mm based on the given key(s).
+            Map(1->'a', 2->'b', 3->'c', 4->'d') -= 4            // -> Map(2 -> b, 1 -> a, 3 -> c)
+            Map(1->'a', 2->'b', 3->'c', 4->'d') -= (3,4)        // -> Map(2 -> b, 1 -> a)
+
+            // mm ++= c
+            //      - Add the elements in the collection c to the mutable map mm.
+            Map(1->'a', 2->'b') ++= List(3->'c', 4->'d')        // ->  Map(2 -> b, 4 -> d, 1 -> a, 3 -> c)
+            // mm --= c
+            //      - Remove the map entries from the mutable map mm based on the keys in the collection c.
+            Map(1->'a', 2->'b', 3->'c') --= List(2,3)           // -> Map(1 -> a)
+
+        }
+    }
+    object FilteringMethods{
+        /* Methods that can be used to filter a collection
+            Include:
+                collect, diff, distinct, drop, dropWhile, filter, filterNot, find, foldLeft, foldRight, head, headOption,
+                init, intersect, last, lastOption, reduceLeft, reduceRight, remove, slice, tail, take, takeWhile, and union.
+        */
 
     }
     object TransformerMethods{
-
+        /* Transformer methods take at least one input collection to create a new output collection, typically using an algorithm you provide
+            Include:
+                +, ++, −, −−, diff, distinct, collect, flatMap, map, reverse, sortWith, takeWhile, zip, and zipWithIndex.
+        */
     }
     object GroupingMethods{
-
+        /*  Grouping Methods let you take an existing collection and create multiple groups from that one collection
+            Include:
+                groupBy, partition, sliding, span, splitAt, and unzip.
+        */
     }
     object InformationalAndMathematicalMethods{
+        /* These Methods: provide information about a collection
+            Including:
+                canEqual, contains, containsSlice, count, endsWith, exists, find, forAll, hasDefiniteSize,
+                indexOf, indexOfSlice, indexWhere, isDefinedAt, isEmpty, lastIndexOf, lastIndexOfSlice, lastIndexWhere,
+                max, min, nonEmpty, product, segmentLength, size, startsWith, sum
 
+                <foldLeft, foldRight, reduceLeft, and reduceRight can also be used with a function you supply to obtain information about a collection.>
+        */
     }
     object Others{
+        /* Hard to categorize
+            Including:
+                par:        - creates a parallel collection from an existing collection;
+                view:       - creates a lazy view on a collection
+                flatten:    - converts a list of lists down to one list
+                foreach:    - letting you iterate over the elements in a collection
+                mkString:   - lets you build a String from a collection
+                to*:        - convert the current collection (a List, for example) to other collection types (Array, Buffer, Vector, etc.).
+        */
 
     }
+}
+
+
+// 10.4. Understanding the Performance of Collections
+package Section10p4{
+    // TBD
+}
+
+// 10.5. Declaring a Type When Creating a Collection Problem
+package Section10p5{
+    object Solution{
+        val x = List[Number](1, 2.0, 33D, 400L)    
+    }
+
 }
