@@ -227,7 +227,7 @@ package Section10p3{
         List("I", "am", "an", "apple") flatMap(_.toUpperCase)       // List(I, A, M, A, N, A, P, P, L, E)
         // c unzip
         //      - The opposite of zip, breaks a collection into two collections by dividing each element into two pieces, as in breaking up a collection of Tuple2 elements.
-        List(("one", "won"), ("two", "too")).unzip     // -> (List(1, 3),List(2, 4))
+        List(("one", "won"), ("two", "too")).unzip     // -> (List(one, two),List(won, too))
         // c1 zip c2
         //       - Creates a collection of pairs by matching the element 0 of c1 with element 0 of c2, element 1 of c1 with element 1 of c2, etc.
         List("one", "two") zip List("won", "too")       // ->  List((one,won), (two,too))
@@ -416,10 +416,6 @@ package Section10p3{
             // m mapValues f
             //      - Returns a new map by applying the function f to every value in the initial map.
             Map(1->'a', 2->'b', 3->'c', 4->'d').mapValues(_.toUpper)        // -> Map(2 -> B, 4 -> D, 1 -> A, 3 -> C)
-
-
-
-
         }
 
 
@@ -435,6 +431,9 @@ package Section10p3{
             // m -- c
             //      - Returns a map with the keys in the collection removed
             Map(1->'a', 2->'b', 3->'c', 4->'d') -- Vector(1,2)      // -> Map(4 -> d, 3 -> c)
+
+            // m ++ m
+            Map(1->'a', 2->'b') ++ Map(3->'c', 4->'d')      // -> Map(2 -> b, 4 -> d, 1 -> a, 3 -> c)
         }
         object MutableMapMethods{
             import scala.collection.mutable._
@@ -509,8 +508,108 @@ package Section10p4{
 
 // 10.5. Declaring a Type When Creating a Collection Problem
 package Section10p5{
-    object Solution{
-        val x = List[Number](1, 2.0, 33D, 400L)    
+    object example1{
+        val x = List[Number](1, 2.0, 33D, 400L)
     }
+    object example2{
+        trait Animal
+        trait FurryAnimal extends Animal
+        case class Dog(name: String) extends Animal
+        case class Cat(name: String) extends Animal
+        val x = Array(Dog("Fido"), Cat("Felix"))        // -> x: Array[Product with Serializable with Animal] = Array(Dog(Fido), Cat(Felix))
+        // manually assign object type
+        val y = Array[Animal](Dog("Fido"), Cat("Felix"))    // -> y: Array[Animal] = Array(Dog(Fido), Cat(Felix))
+    }
+}
 
+
+// 10.6. Understanding Mutable Variables with Immutable Collections
+package Section10p6{
+    // Mutable Variable vs Immutable Variable
+    //      - A mutable variable (var) can be reassigned to point at new data.
+    //      - An immutable variable (val) is like a final variable in Java; it can never be reassigned.
+
+    // Mutable Collection vs Immutable Collection
+    //      - The elements in a mutable collection (like ArrayBuffer) can be changed.
+    //      - The elements in an immutable collection (like Vector) cannot be changed.
+    //           -> but can possibly return a new immutable collection with the corresponding element added/removed/updated (ex. the ":+", "++" operators)
+
+    object example1{
+        var sisters = Vector("Melinda")
+        sisters = sisters :+ "Melissa"
+        sisters = sisters :+ "Marisa"
+        // sisters is mutable but Vector is immutable Seq. how can this possible?
+        //      -> this is because :+ operator returns a new Vector with the new element added and sisters got reassigned to this new Vector
+
+        /*
+            sisters(0) = "Molly"
+            //  this does not work because sisters points to a Vector and it is an immutable Seq
+            val brothers = Vector("David")
+            brothers = brothers :+ "George"
+            brothers = brothers :+ "Tom"
+            //  this does not work either because we cannot reassign brother to the new Vector returned by :+ operator since it is val
+        */
+    }
+}
+
+// 10.7. Make Vector Your “Go To” Immutable Sequence
+//      “When in Doubt, Use Vector.”
+package Section10p7{
+    object Example1{
+        // create a vector and access its elements
+        val v = Vector("a", "b", "c")
+        v(0)
+
+        // You can’t modify a vector (immutable), so you “add” elements to an existing vector as you assign the result to a new variable:
+        val a = Vector(1, 2, 3)
+        val b = a ++ Vector(4,5)        // Vector(1, 2, 3, 4, 5)
+        val c = b.updated(0, 100)       // replace one element in a Vector while assigning the result to a new variable
+        var x = a.take(2)
+        x = a.filter(_ > 2)
+    }
+}
+
+// 10.8. Make ArrayBuffer Your “Go To” Mutable Sequence
+package Section10p8{
+    import scala.collection.mutable.ArrayBuffer         // need to import before use, because mutable is not default available in Scala
+    object Example1{
+        // Create empty ArrayBuffer
+        var fruits = ArrayBuffer[String]()
+        var ints = ArrayBuffer[Int]()
+
+        // manipulate ArrayBuffer
+        var nums = ArrayBuffer(1,2,3,4)
+        nums += 4
+        nums +=(5,6)
+        nums ++= ArrayBuffer(5,6,7)
+        nums ++= List(9,0)
+
+        nums --=Vector(4,5,6)
+        // ...
+    }
+    object Example2{
+        // there are many other methods to manipulate ArrayBuffer
+        val a = ArrayBuffer(1, 2, 3) // ArrayBuffer(1, 2, 3)
+        a.append(4)             // ArrayBuffer(1, 2, 3, 4)
+        a.append(5, 6)          // ArrayBuffer(1, 2, 3, 4, 5, 6)
+        a.appendAll(Seq(7,8))       // ArrayBuffer(1, 2, 3, 4, 5, 6, 7, 8)
+        a.clear         // ArrayBuffer()
+
+
+        val b = ArrayBuffer(9, 10)
+        b.insert(0, 8)          // ArrayBuffer(8,9,10)
+        b.insert(0, 6, 7)       // ArrayBuffer(6,7,8,9,10)
+        b.insertAll(0, Vector(4, 5)) // ArrayBuffer(4, 5, 6, 7, 8, 9, 10)
+        b.prepend(3)            // ArrayBuffer(3, 4, 5, 6, 7, 8, 9, 10)
+        b.prepend(1, 2)         // ArrayBuffer(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        b.prependAll(Array(0))      // ArrayBuffer(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+        val c = ArrayBuffer.range('a', 'h') // ArrayBuffer(a, b, c, d, e, f, g)
+        c.remove(0) // ArrayBuffer(b, c, d, e, f, g)
+        c.remove(2, 3) // ArrayBuffer(b, c, g)
+
+        val d = ArrayBuffer.range('a', 'h') // ArrayBuffer(a, b, c, d, e, f, g)
+        d.trimStart(2) // ArrayBuffer(c, d, e, f, g)
+        d.trimEnd(2) // ArrayBuffer(c, d, e)
+    }
 }

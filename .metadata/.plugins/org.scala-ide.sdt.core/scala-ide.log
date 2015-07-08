@@ -1,0 +1,4 @@
+2015-07-01 19:23:53,903 ERROR [main] - System.err - log4j:WARN No appenders could be found for logger (org.springsource.ide.eclipse.commons.core.templates.TemplateProcessor).
+2015-07-01 19:23:53,904 ERROR [main] - System.err - log4j:WARN Please initialize the log4j system properly.
+2015-07-03 23:09:34,050 ERROR [main] - System.err - log4j:WARN No appenders could be found for logger (org.springsource.ide.eclipse.commons.core.templates.TemplateProcessor).
+2015-07-03 23:09:34,050 ERROR [main] - System.err - log4j:WARN Please initialize the log4j system properly.
