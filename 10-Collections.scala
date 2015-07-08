@@ -611,5 +611,6 @@ package Section10p8{
         val d = ArrayBuffer.range('a', 'h') // ArrayBuffer(a, b, c, d, e, f, g)
         d.trimStart(2) // ArrayBuffer(c, d, e, f, g)
         d.trimEnd(2) // ArrayBuffer(c, d, e)
+        
     }
 }
