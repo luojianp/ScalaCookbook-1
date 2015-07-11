@@ -611,6 +611,86 @@ package Section10p8{
         val d = ArrayBuffer.range('a', 'h') // ArrayBuffer(a, b, c, d, e, f, g)
         d.trimStart(2) // ArrayBuffer(c, d, e, f, g)
         d.trimEnd(2) // ArrayBuffer(c, d, e)
-        
+    }
+}
+
+// 10.9. Looping over a Collection with foreach
+package Section10p9{
+    // foreach method applies your function to each element of the collection, but it doesn’t return a value.
+    //      -> having side-effect because it does not return a value
+    object Example1{
+        val x = Vector(1,2,3)
+        x.foreach((i:Int)=>println(i))
+        x.foreach(i => println(i))      // scala can infer the type -> Int is not necessary
+        x.foreach(println(_))       // can use the _ wildcard
+        x.foreach(println)      // a function literal consists of one statement that takes a single argument, it can be condensed to this form
+    }
+    object Example2{
+        // use multi-line function within forreach
+        val x = Vector(1,2,3)
+        x.foreach{ i =>
+            var m = i*2
+            println(m)
+        }   // prints 2 4 6
+    }
+
+    object Example3{
+        // Map can also use foreach
+        val m = Map("fName"->"Duo", "lName"->"Yao")
+        m.foreach(x => println(s"${x._1} -> ${x._2}"))
+        m.foreach {     // a more preferred way
+            case(myKey, myVal) => println(s"${myKey} -> ${myVal}")
+        }
+    }
+}
+
+// 10.10. Looping over a Collection with a for Loop
+package Section10{
+    // Notes:
+    //      When using a for loop, the <- symbol can be read as “in"
+
+    object Example1{    // general for loop
+        val fruits = Traversable("apple", "banana", "orange")
+        for (f<-fruits) println(f)
+        for (f <- fruits) println(f.toUpperCase)
+        for (f<-fruits){
+            val s = f.toUpperCase
+            println(s)
+        }
+    }
+    object Example2{    // using counter inside a for loop
+        val fruits = Array("apple", "banana", "orange")
+        for(i <- 0 until fruits.size) println(s"$i element is ${fruits(i)}")    // using until (does not include the last element), Note, if using to, it will include the last element
+        for ((frt,idx) <- fruits.zipWithIndex) println(s"$idx element is $frt")     // using zipWithIndex
+
+        // using to and untill
+        for(i <- 1 to 3) println(i)         // gives 0,1,2,3  -  good for doing something n times
+        for(i <- 0 until 3) println(i)      // gives 0,1,2     - good for looping through Vector/List
+    }
+
+    object Example3{    // using for..yield : this generates a new collection, no side-effect
+        val fruits = Array("apple", "banana", "orange")
+        val newFruits = for (i<-fruits) yield i.toUpperCase
+        val newFruits2 = for (i<-fruits) yield{
+            val tmp = i.toUpperCase
+            tmp
+        }   // Array(APPLE, BANANA, ORANGE)
+
+        def toUpperRev(s:String) = s.toUpperCase.reverse    // define a method and use it in for...yield
+        for (i <- fruits) yield toUpperRev(i)   // -> Array(ELPPA, ANANAB, EGNARO)
+        val toUpperRev2 = (i:String) => i.toUpperCase.reverse   // define a function and use it in for...yield
+        for (i <- fruits) yield toUpperRev2(i)   // -> Array(ELPPA, ANANAB, EGNARO)
+    }
+
+    object Example4{    // iterating over Map
+        val myMap = Map("fName"->"Duo", "lName"->"Yao")
+        for ((fN, lN) <- myMap) println(s"$fN, $lN")
+    }
+
+    object Example5{    // using Guards in for loop (use if statements inside for loop)
+        for {
+            i <- 0 to 10
+            if(i<5)
+        } println(i)    // prints 0,1,2,3,4
     }
 }
