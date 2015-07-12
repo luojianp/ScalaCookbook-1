@@ -694,3 +694,59 @@ package Section10{
         } println(i)    // prints 0,1,2,3,4
     }
 }
+
+// 10.11. Using zipWithIndex or zip to Create Loop Counters
+package Section10p11{
+    object Example1{
+        val days = Array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
+        days.zipWithIndex.foreach{  // use zipWithIndex in foreach loop
+            case (day, idx) => println(s"$idx is $day")
+        }
+        days.zipWithIndex.foreach{
+            d => println(s"${d._1} is ${d._2}")
+        }
+        for ((day, idx) <- days.zipWithIndex) {     // use zipWithIndex in for loop
+            println(s"$idx is $day")
+        }
+
+        for((day, idx) <- days.zip(Stream from 1)){
+            // use the zip method with a Stream to create a counter: gives you a way to control the starting value
+            println(s"$idx is $day")
+        }
+    }
+}
+
+
+// 10.12. Using Iterators
+package Section10p12{
+    //  important part of using an iterator is
+    //      - knowing that it’s exhausted after you use it.
+    //      - As you access each element, you mutate the iterator, and the previous element is discarded.
+    object Example1{
+        val it = Iterator(1,2,3)
+        it.foreach(println)     // prints 1, 2, 3
+        it.foreach(println)     // prints nothing since it has exhausted
+    }
+}
+
+
+// 10.13. Transforming One Collection to Another with for/ yield
+package Section10p13{
+    object Example1{
+        val fruits = Vector("apple", "banana", "lime", "orange")
+        for (i <- 0 until fruits.length) yield (i, fruits(i))
+        for (f <- fruits) yield (f, f.length)
+        val x = for (e <- fruits if e.length < 6) yield e.toUpperCase   // can add guards (if statements)
+        val y = for {
+            e <- fruits
+            if e.length < 6
+        } yield e.toUpperCase   // can add guards (if statements)
+            val y_2 = fruits.map(f=>if(f.length<6) f.toUpperCase)     // same output using map
+    }
+    object Example2{
+        case class Person (name: String)
+        val friends = Vector("Mark", "Regina", "Matt")
+        for (name <- friends) yield Person(name)    // -> Vector(Person(Mark), Person(Regina), Person(Matt))
+    }
+}
