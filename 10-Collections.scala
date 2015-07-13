@@ -933,3 +933,47 @@ package Section10p19{
         val couples = women zip men     // -> List((Kim,Al), (Julia,Terry))
     }
 }
+
+// 10.20. Walking Through a Collection with the reduce and fold Methods
+// Problem:
+//      You want to walk through all of the elements in a sequence, comparing two neighboring elements as you walk through the collection.
+// Solution:
+//      Use the reduceLeft, foldLeft, reduceRight, and foldRight methods
+package Section10p20{
+    // The function passed to reduce and fold methods must:
+    //      reads in TWO arguments and yields a SINGLE SAME-TYPE result
+    object Example1{
+        val a = Array(12, 6, 15, 2, 20, 9)
+        a.reduceLeft(_+_)   // -> 64    (get the sum of all elements)
+        a.reduceLeft((x,y)=>x+y)    // -> 64
+        a.reduceLeft(_*_)   // -> 388800    (get the produce of all elements)
+        a.reduceLeft(_ min _)   // -> 2     (get the smallest)
+        a.reduceLeft(_ max _)   // -> 20    (get the largest)
+
+        val peeps = Vector("al", "hannah", "emily", "christina", "aleka")
+        val longest = peeps.reduceLeft((x,y)=> if(x.length>y.length) x else y)      // -> christina
+    }
+
+    object Example2{
+        // foldLeft method works just like reduceLeft, but it lets you set a seed value to be used for the first element
+        val a = Array(1, 2, 3)
+        a.reduceLeft(_ + _)     // -> 6
+        a.foldLeft(20)(_+_)     // -> 26
+    }
+    object Example3{    // scanLeft scanRight ...
+        // scanLeft “Produces a collection containing cumulative results of applying the operator going left to right.”
+        val product = (x: Int, y: Int) => {
+            val result = x * y
+            println(s"multiplied $x by $y to yield $result")
+            result
+        }
+        val a = Array(1, 2, 3)
+        a.scanLeft(10)(product)
+        /* output:
+            multiplied 10 by 1 to yield 10
+            multiplied 10 by 2 to yield 20
+            multiplied 20 by 3 to yield 60
+            res90: Array[Int] = Array(10, 10, 20, 60)
+        */
+    }
+}
