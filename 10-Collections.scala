@@ -750,3 +750,186 @@ package Section10p13{
         for (name <- friends) yield Person(name)    // -> Vector(Person(Mark), Person(Regina), Person(Matt))
     }
 }
+
+
+// 10.14. Transforming One Collection to Another with map
+package Section10p14{
+    object Example1{
+        val helpers = Vector("adam", "kim", "melissa")
+        val caps1 = helpers.map(e => e.capitalize)
+        val caps2 = helpers.map(_.capitalize)        // -> Vector(Adam, Kim, Melissa)
+        val xmls = helpers.map(name => <li>{name}</li>)     // -> Vector(<li>adam</li>, <li>kim</li>, <li>melissa</li>)
+
+        val s = " eggs, milk, butter, Coco Puffs "
+        val s_trimmed = s.split(',').map(_.trim)    // -> Array(eggs, milk, butter, Coco Puffs)
+    }
+    object Example2{    // define function and pass it to map
+        val plusOne = (i:Char) => (i.toByte+1).toChar
+        def plusOne(i:Char):Char = (i.toByte+1).toChar
+        "HAL".map(plusOne)      // -> IBM
+    }
+    object Example3{    // map and for..yield are different when involving guards
+        val fruits = List("apple", "banana", "lime", "orange", "raspberry")
+        for (i <- fruits if(i.length< 6)) yield i.toUpperCase     // -> List(APPLE, LIME)
+        fruits.map(i => if(i.length<6) i.toUpperCase)       // List(APPLE, (), LIME, (), ())
+        fruits.filter(_.length<6).map(_.toUpperCase)        // List(APPLE, LIME) : think of an if statement as being a filter
+    }
+}
+
+// 10.15. Flattening a List of Lists with flatten
+package Section10p15{
+    object Example1{
+        val lol = List(List(1,2), List(3,4))
+        val lol_flat = lol.flatten      // ->  List(1, 2, 3, 4)
+
+        val lol1 = Array(Array(1,2), Array(2,3))
+        val lol1_flat = lol1.flatten.distinct    // -> Array(1, 2, 3)
+
+        val lol2 = Array(List(1,2), List(3,4))
+        val lol2_flat = lol2.flatten    // -> Array(1, 2, 3, 4)
+    }
+
+    object Example2{
+        val list = List("Hello", "world")
+        val list_flatten = list.flatten     // -> List(H, e, l, l, o, w, o, r, l, d)
+
+        val x = Vector(Some(1), None, Some(3), None)
+        // flatten pulls the values out of the Some elements to create the new list, and drops the None elements:
+        val x_flatten = x.flatten       // -> Vector(1, 3)
+    }
+}
+
+
+// 10.16. Combining map and flatten with flatMap
+//      -> Use flatMap in situations where you run map followed by flatten
+// General rule: Whenever you think map followed by flatten, use flatMap
+package Section10p16{
+    object Example1{
+        val bag = List("1", "2", "three", "4", "one hundred seventy five")
+        def toInt(s:String): Option[Int] = {
+            try {
+              Some(Integer.parseInt(s.trim))
+            } catch {
+              case e: Exception => None
+            }
+        }
+        val sum = bag.flatMap(toInt).sum    // -> 7
+            // bag.map(toInt) -> List(Some(1), Some(2), None, Some(4), None)
+            // bag.flatMap(toInt) -> List(1, 2, 4)
+            //  -  flatten works very well with a list of Some and None elements
+            //           It extracts the values from the Some elements while discarding the None elements:
+    }
+    object Example2{
+        val subWord = (word:String) => List(word, word.tail, word.init)
+        List("apple", "banana", "orange").map(subWord).flatten  // -> List(apple, pple, appl, banana, anana, banan, orange, range, orang)
+        List("apple", "banana", "orange").flatMap(subWord)      // -> List(apple, pple, appl, banana, anana, banan, orange, range, orang)
+    }
+}
+
+
+// 10.17. Using filter to Filter a Collection
+package Section10p17{
+    object Example1{
+        val x = List.range(1,10)
+        val evens = x.filter(_%2 == 0)    // -> List(2, 4, 6, 8)
+
+        val fruits = Set("orange", "peach", "apple", "banana")
+        val x1 = fruits.filter(_.startsWith("a"))
+        val y2 = fruits.filter(_.length > 5)
+    }
+    object Example2{    // filter with multi-line condition
+        val list = "apple" :: "banana" :: 1 :: 2 :: Nil
+        val strings = list.filter{
+            case s:String => true
+            case _ => false
+        }       // -> List(apple, banana)
+
+        def onlyString(s:Any) = s match {
+                case a:String => true
+                case _ => false
+        }
+        list.filter(onlyString)     // -> List(apple, banana)
+    }
+}
+
+
+// 10.18. Extracting a Sequence of Elements from a Collection
+package Section10p18{
+    object Example1{
+        val x = (1 until 10).toArray    // Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+        val x2 = (1 to 10).toArray      // Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        val x1 = Array.range(1, 10)     // Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+
+        var y = x.drop(3)       // Array(4, 5, 6, 7, 8, 9)
+        y = x.dropWhile(_ < 6)  // Array(6, 7, 8, 9)
+        y = x.dropRight(4)  // Array(1, 2, 3, 4, 5)
+        y = x.take(3)       // Array(1, 2, 3)
+        y = x.takeWhile(_ < 5)      // Array(1, 2, 3, 4)
+        y = x.takeRight(3)      // Array(7, 8, 9)
+        // a more generic method to slice: slice()
+        y = x.slice(1,5)    // Array(2, 3, 4, 5)
+
+
+        val nums = (1 to 5).toArray     // Array(1, 2, 3, 4, 5)
+        nums.head           // 1
+        nums.headOption     // Some(1)
+        nums.init           // Array(1, 2, 3, 4)
+        nums.last           // 5
+        nums.lastOption     // Some(5)
+        nums.tail           // Array(2, 3, 4, 5)
+    }
+}
+
+
+// 10.19. Breaking Sequences into Subsets (groupBy, partition, etc.)
+package Section10p19{
+    object Example1{    // normal breaking into subset method
+        val x = List(15, 10, 5, 8, 20, 12)
+
+        var y = x.groupBy(_>10)     // -> Map(false -> List(10, 5, 8), true -> List(15, 20, 12))
+        val trues = y(true)     // accessing groupBy output
+        val falses = y(false)
+            // trues: List[Int] = List(15, 20, 12)
+            // falses: List[Int] = List(10, 5, 8)
+
+        // creates two lists,
+        //  - one containing values for which your predicate returned true
+        //  - the other containing the elements that returned false.
+        var y1 = x.partition(_ > 10)     // (List(15, 20, 12),List(10, 5, 8))
+        val (a,b) = x.partition(_ > 10)     // accessing partition output
+            // a: List[Int] = List(15, 20, 12)
+            // b: List[Int] = List(10, 5, 8)
+
+        // returns a Tuple2 based on your pred‐ icate p, consisting of “the longest prefix of this list whose elements all satisfy p, and the rest of this list.”
+        var y2 = x.span(_ < 20)      // (List(15, 10, 5, 8),List(20, 12))
+        var y3 = x.splitAt(2)       // (List(15, 10),List(5, 8, 20, 12))
+    }
+    object Example2{    // the sliding(size, step) method
+        // Note:    sliding(size, step)
+        //  - sliding works by passing a “sliding window” over the original sequence,
+        //      - returning sequences of a length given by size.
+        //      - The step parameter lets you skip over elements, as shown in the last two examples.
+        //  - Just calling sliding() will return an iterator
+
+        val x = (1 to 5).toArray
+        var y = x.sliding(2).toList     // ->  List(Array(1, 2), Array(2, 3), Array(3, 4), Array(4, 5))
+            // default step=1
+        var y1 = x.sliding(2,2).toList  // -> List(Array(1, 2), Array(3, 4), Array(5))
+            // size=2, step=2
+        var y2 = x.sliding(2,3).toList  // -> List(Array(1, 2), Array(4, 5))
+            // size=2, step=3
+    }
+    object Example3{    // the unzip() method
+        // Note:
+        //  - unzip() can be used to take a sequence of Tuple2 values and create two resulting lists:
+        //      - one contains the first element of each tuple
+        //      - another contains the second element from each tuple:
+        val listOfTuple2s = List((1,2), ('a', 'b'))
+        val x = listOfTuple2s.unzip     // -> (List(1, a),List(2, b))
+
+        // the zip method:
+        val women = List("Kim", "Julia")
+        val men = List("Al", "Terry")
+        val couples = women zip men     // -> List((Kim,Al), (Julia,Terry))
+    }
+}
