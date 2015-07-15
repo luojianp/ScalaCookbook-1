@@ -977,3 +977,148 @@ package Section10p20{
         */
     }
 }
+
+// 10.21. Extracting Unique Elements from a Sequence
+package Section10p21{
+    object Example1{    // using distinct method
+        val x = Vector(1, 1, 2, 3, 3, 4)
+        val y = x.distinct  // Vector(1, 2, 3, 4)
+    }
+    object Example2{    // converting to a set
+        val x = Vector(1, 1, 2, 3, 3, 4)
+        val y = x.toSet     //  Set(1, 2, 3, 4)
+    }
+}
+
+
+// 10.22. Merging Sequential Collections
+package Section10p22{
+    import scala.collection.mutable._
+    import scala.collection.immutable._
+    // Use the ++= method to merge a sequence into a mutable sequence.
+    object Example1{
+        var a = ArrayBuffer(1,2,3)
+        var b = ArrayBuffer(2,3,4)
+        a ++=b  // this has to work on mutable collections because the way ++= is called appears needing modify a
+
+        var d = a -- b  // this -- operator does not work on immutable collections
+    }
+    // Use the ++ method to merge two mutable or immutable sequences.
+    object Example2{
+        var a = Vector(1,2,3)
+        var b = Vector(3,4,5)
+        var c = a++b    // Vector(1, 2, 3, 3, 4, 5)
+            // this works on both immutable or mutable collections because the way ++ is called does not appears to modify anything
+    }
+    // Use collection methods like union, diff, and intersect : works on both mutable and immutable
+    object Example3{
+        var a = ArrayBuffer(1,2,3)
+        var b = ArrayBuffer(2,3,4)
+        var c = Vector(1,2,3)
+        var d = Vector(2,3,4)
+
+        a union b   // ArrayBuffer(1, 2, 3, 2, 3, 4)
+        a diff b    // ArrayBuffer(1)
+        a intersect b   // ArrayBuffer(2, 3)
+
+        c union d   // Vector(1, 2, 3, 2, 3, 4)
+        c diff d    // Vector(1)
+        c intersect d   // Vector(2, 3)
+    }
+    // The objects that correspond to most collections also have a concat method
+    object Example4{
+        var a = ArrayBuffer(1,2,3)
+        var b = ArrayBuffer(2,3,4)
+        var c = Vector(1,2,3)
+        var d = Vector(2,3,4)
+        ArrayBuffer.concat(a,b)
+        Vector.concat(c,d)
+    }
+    // If you happen to be working with a List, the ::: method prepends the elements of one list to another list:
+    object Example5{
+        val a = List(1,2,3)
+        val b = List(2,3,4)
+        val c = a:::b   // -> List(1, 2, 3, 2, 3, 4)
+    }
+}
+
+
+// 10.23. Merging Two Sequential Collections into Pairs with zip
+package Section10p23{
+    object Example1{    // zip creates an Array of Tuple2 elements
+        val women = List("Wilma", "Betty")
+        val men = List("Fred", "Barney")
+        val couples = women zip men     // -> List((Wilma,Fred), (Betty,Barney))
+        val couplesMap = couples.toMap  // can covert a sequence of tuples to a Map,    -> Map(Wilma -> Fred, Betty -> Barney)
+
+        for ((wife, husband) <- couples) {
+            println(s"$wife is married to $husband")
+        }
+    }
+
+    // If one collection contains more items than the other collection, the items at the end of the longer collection will be dropped.
+    object Example2{
+        val products = Array("breadsticks", "pizza", "soft drink")
+        val prices = Array(4)
+        val productsWithPrice = products.zip(prices)    // -> Array((breadsticks,4))
+        val (a,b) = productsWithPrice.unzip
+            // a: Array[String] = Array(breadsticks)
+            // b: Array[Int] = Array(4)
+    }
+}
+
+
+// 10.24. Creating a Lazy View on a Collection
+//      - create a “lazy” version of it so it will only compute and return results as they are actually needed.
+package Section10p24{
+    // A view makes the result non‐ strict, or lazy
+    //      - this changes the resulting collection
+    //      - when it’s used with a transformer method, the elements will only be calculated as they are accessed
+    //          (A transformer is a method that constructs a new collection from an existing collection.)
+    object Example1{
+        val view = (1 to 100).view      // create a view
+        val x = view.force      // force it back to a normal collection : Vector()
+    }
+    object Example2{
+        val x = (1 to 1000).view.map { e =>
+            Thread.sleep(10)
+            e*2
+        }       // it will return immediately, returning a SeqView
+        x.foreach(print)
+        // there will be a 10 ms pause before each element is printed.
+        //      the penalty of the Thread.sleep method call is paid as each element is yielded.
+
+        val y = (1 to 1000).map { e =>
+            Thread.sleep(10)
+            e*2
+        }       // with the view method removed, the code block will take about 10 seconds to run.
+        // the penalty of the Thread.sleep method call is paid all together when the code is executed
+    }
+
+    object Example3{
+        // Two Primary Usecases
+        //  - Performance
+        //  - To treat a collection like a database view
+
+        object Example3p1{
+            // Performance:
+            //      You certainly want to avoid running an algorithm on a billion elements if you don’t have to, so using a view makes sense here.
+        }
+        object Example3p2{
+            // how a collection view works like a database view:
+            //      When you need to modify a subset of elements in a collection,
+            //          creating a view on the original collection and modifying the elements in the view can be a powerful way to achieve this goal
+            val arr = (1 to 10).toArray
+            val view = arr.view.slice(2, 5)
+            arr(2) = 42
+            // Changing the elements in the array updates the view
+            view.foreach(println)   // 42, 4, 5
+
+            view(0) = 10
+            view(1) = 20
+            view(2) = 30
+            // changing the elements refer‐ enced by the view changes the elements in the array.
+            arr.foreach(println)      // prints elements in Array(1, 2, 10, 20, 30, 6, 7, 8, 9, 10)
+        }
+    }
+}
